@@ -1,0 +1,23 @@
+---
+title: "Exercise-05"
+author: "Mauricio Velasco"
+format: html
+editor: visual
+---
+
+# Exercise-05
+
+## Applied Data Analysis excercise
+
+```{r}
+#Step 1
+##Lets start loading the dictionaries
+
+library(tidyverse)
+
+## Let's start with the data file
+
+f<- "https://raw.githubusercontent.com/difiore/ada-datasets/refs/heads/main/IMDB-movies.csv"
+
+d<- read_csv(f, col_names = TRUE)
+```
