@@ -9,12 +9,16 @@ editor: visual
 
 ## Applied Data Analysis excercise
 
+### Challenge 1
+
 ```{r}
 #Step 1
 ##Lets start loading the dictionaries
 
 library(tidyverse)
 library(dplyr)
+library(infer)
+
 
 ## Load the data file
 
@@ -28,9 +32,105 @@ colnames(d)
 #Step 2
 ##filter the dataset
 
-s<- filter (d, startYear >= "1920" & startYear <= "1979", runtimeMinutes >= "60" & runtimeMinutes<= "180")
+s<- d %>%
+  filter (startYear >= 1920 & startYear <= 1979, runtimeMinutes >= 60 & runtimeMinutes<= 180)%>%
+  mutate(decade = paste0(substr(startYear, 3, 3), "0s"))
   
+view(s)
 summarise(s)  
   
+#Step 3
+## plot histograms of runtimeMinutes for decade
 
+ggplot(s, aes(x = runtimeMinutes))+
+  geom_histogram(binwidth = 5, fill = "gray", color = "white") +
+  facet_wrap(~decade)+
+  labs(title = "Runtime by Decade", x = "Runtime (minutes)", y = "Count") + theme_classic()
+
+#Step 4
+## mean and standard deviation
+
+r<- s %>%
+  group_by(decade) %>%
+  summarise(mean_runtime = mean(runtimeMinutes), sd_runtime = sd(runtimeMinutes))
+
+r
+
+#Step 5
+##Sample of 100 movies
+
+r_sample <- s %>%
+  group_by(decade) %>%
+  slice_sample(n = 100, replace = FALSE) %>%
+  summarise(sample_mean_runtime = mean(runtimeMinutes), sample_sd_runtime = sd(runtimeMinutes))
+
+r_sample
+
+#Step 6
+##Standard error se
+
+r_sample <- s %>%
+  group_by(decade) %>%
+  slice_sample(n = 100, replace = FALSE) %>%
+  summarise(sample_mean_runtime = mean(runtimeMinutes),
+sample_sd_runtime = sd(runtimeMinutes),
+sample_se_runtime = (sd(runtimeMinutes) / sqrt(n()))
+)
+
+r_sample
+
+#Step 7
+##Compare the estimates and mean runtime in Minutes
+
+comp <- r %>%
+  mutate(p_se = sd_runtime / sqrt(100)) %>%
+  left_join(r_sample, by = "decade")
+
+comp
+
+#Step 8
+##Sampling distribution
+
+set.seed(123)
+
+sampling_dist <- s %>%
+  group_by(decade)%>%
+  rep_sample_n(size = 100, replace = FALSE, reps = 1000)%>%
+  group_by(decade, replicate)%>%
+  summarise(sample_mean_runtime = mean(runtimeMinutes), 
+            sample_sd_runtime = sd(runtimeMinutes), 
+            .groups = "drop")
+  
+
+sampling_dist
+head(sampling_dist)
+
+#Step 9
+## mean and sd of sample distribution of sample means
+
+
+sampling_dist_summary <- sampling_dist %>%
+  group_by(decade) %>%
+  summarise(mean_means = mean(sample_mean_runtime),
+            sd_means = sd(sample_mean_runtime))
+
+sampling_dist_summary
+
+#Step 10
+## Compare se for sample fro time in Minutes
+
+se_comp <- r%>%
+  mutate(p_se = sd_runtime / sqrt(100))%>%
+  
+  left_join(r_sample %>%
+              select(decade, se_sample=sample_se_runtime), 
+            by = "decade")%>%
+  
+  left_join(sampling_dist_summary %>%
+              select(decade, se_sampling_dist = sd_means),
+            by = "decade")%>%
+  
+  select(decade, se_sample, p_se, se_sampling_dist)
+
+se_comp
 ```
