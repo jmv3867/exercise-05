@@ -14,10 +14,23 @@ editor: visual
 ##Lets start loading the dictionaries
 
 library(tidyverse)
+library(dplyr)
 
-## Let's start with the data file
+## Load the data file
 
 f<- "https://raw.githubusercontent.com/difiore/ada-datasets/refs/heads/main/IMDB-movies.csv"
 
 d<- read_csv(f, col_names = TRUE)
+view(d)
+print(d)
+colnames(d)
+
+#Step 2
+##filter the dataset
+
+s<- filter (d, startYear >= "1920" & startYear <= "1979", runtimeMinutes >= "60" & runtimeMinutes<= "180")
+  
+summarise(s)  
+  
+
 ```
